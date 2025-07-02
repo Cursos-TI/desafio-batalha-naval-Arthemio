@@ -3,74 +3,128 @@
 #define TAM 10
 #define AGUA 0
 #define NAVIO 3
+#define HABILIDADE 5
+#define TAM_HAB 5
+
+// Função para exibir o tabuleiro com símbolos diferentes
+void exibirTabuleiro(int tabuleiro[TAM][TAM]) {
+    printf("\nTabuleiro:\n\n");
+    for (int i = 0; i < TAM; i++) {
+        for (int j = 0; j < TAM; j++) {
+            if (tabuleiro[i][j] == AGUA)
+                printf("~ "); // água
+            else if (tabuleiro[i][j] == NAVIO)
+                printf("N "); // navio
+            else if (tabuleiro[i][j] == HABILIDADE)
+                printf("* "); // área de habilidade
+            else
+                printf("? "); // qualquer outro valor inesperado
+        }
+        printf("\n");
+    }
+}
+
+// Cria matriz de habilidade Cone (↘ em forma de pirâmide)
+void criarCone(int matriz[TAM_HAB][TAM_HAB]) {
+    for (int i = 0; i < TAM_HAB; i++) {
+        for (int j = 0; j < TAM_HAB; j++) {
+            if (j >= TAM_HAB/2 - i && j <= TAM_HAB/2 + i)
+                matriz[i][j] = 1;
+            else
+                matriz[i][j] = 0;
+        }
+    }
+}
+
+// Cria matriz de habilidade Cruz (+)
+void criarCruz(int matriz[TAM_HAB][TAM_HAB]) {
+    for (int i = 0; i < TAM_HAB; i++) {
+        for (int j = 0; j < TAM_HAB; j++) {
+            if (i == TAM_HAB/2 || j == TAM_HAB/2)
+                matriz[i][j] = 1;
+            else
+                matriz[i][j] = 0;
+        }
+    }
+}
+
+// Cria matriz de habilidade Octaedro (losango)
+void criarOctaedro(int matriz[TAM_HAB][TAM_HAB]) {
+    for (int i = 0; i < TAM_HAB; i++) {
+        for (int j = 0; j < TAM_HAB; j++) {
+            if (abs(i - TAM_HAB/2) + abs(j - TAM_HAB/2) <= TAM_HAB/2)
+                matriz[i][j] = 1;
+            else
+                matriz[i][j] = 0;
+        }
+    }
+}
+
+// Aplica matriz de habilidade no tabuleiro, centralizada no ponto (linha, coluna)
+void aplicarHabilidade(int tabuleiro[TAM][TAM], int habilidade[TAM_HAB][TAM_HAB], int linha, int coluna) {
+    int offset = TAM_HAB / 2;
+    for (int i = 0; i < TAM_HAB; i++) {
+        for (int j = 0; j < TAM_HAB; j++) {
+            int li = linha + i - offset;
+            int co = coluna + j - offset;
+
+            // Valida se está dentro dos limites do tabuleiro
+            if (li >= 0 && li < TAM && co >= 0 && co < TAM) {
+                if (habilidade[i][j] == 1 && tabuleiro[li][co] == AGUA) {
+                    tabuleiro[li][co] = HABILIDADE;
+                }
+            }
+        }
+    }
+}
 
 int main() {
-    // Criando o tabuleiro e preenchendo com 0 (água)
     int tabuleiro[TAM][TAM];
+
+    // Inicializa o tabuleiro com água
     for (int i = 0; i < TAM; i++) {
         for (int j = 0; j < TAM; j++) {
             tabuleiro[i][j] = AGUA;
         }
     }
 
-    // === NAVIO 1: Horizontal ===
-    int l1 = 1, c1 = 2; // linha 1, coluna 2
-    if (c1 + 2 < TAM &&
-        tabuleiro[l1][c1] == AGUA &&
-        tabuleiro[l1][c1+1] == AGUA &&
-        tabuleiro[l1][c1+2] == AGUA) {
-        
-        tabuleiro[l1][c1] = NAVIO;
-        tabuleiro[l1][c1+1] = NAVIO;
-        tabuleiro[l1][c1+2] = NAVIO;
-    }
+    // Posiciona 2 navios como exemplo
+    tabuleiro[1][2] = NAVIO;
+    tabuleiro[1][3] = NAVIO;
+    tabuleiro[1][4] = NAVIO;
 
-    // === NAVIO 2: Vertical ===
-    int l2 = 4, c2 = 6;
-    if (l2 + 2 < TAM &&
-        tabuleiro[l2][c2] == AGUA &&
-        tabuleiro[l2+1][c2] == AGUA &&
-        tabuleiro[l2+2][c2] == AGUA) {
+    tabuleiro[4][6] = NAVIO;
+    tabuleiro[5][6] = NAVIO;
+    tabuleiro[6][6] = NAVIO;
 
-        tabuleiro[l2][c2] = NAVIO;
-        tabuleiro[l2+1][c2] = NAVIO;
-        tabuleiro[l2+2][c2] = NAVIO;
-    }
+    // Posiciona 2 navios diagonais
+    tabuleiro[6][0] = NAVIO;
+    tabuleiro[7][1] = NAVIO;
+    tabuleiro[8][2] = NAVIO;
 
-    // === NAVIO 3: Diagonal ↘ ===
-    int l3 = 6, c3 = 0;
-    if (l3 + 2 < TAM && c3 + 2 < TAM &&
-        tabuleiro[l3][c3] == AGUA &&
-        tabuleiro[l3+1][c3+1] == AGUA &&
-        tabuleiro[l3+2][c3+2] == AGUA) {
+    tabuleiro[2][8] = NAVIO;
+    tabuleiro[3][7] = NAVIO;
+    tabuleiro[4][6] = NAVIO; // já existe, mas ok para exemplo
 
-        tabuleiro[l3][c3] = NAVIO;
-        tabuleiro[l3+1][c3+1] = NAVIO;
-        tabuleiro[l3+2][c3+2] = NAVIO;
-    }
+    // Criação das 3 habilidades
+    int cone[TAM_HAB][TAM_HAB];
+    int cruz[TAM_HAB][TAM_HAB];
+    int octaedro[TAM_HAB][TAM_HAB];
 
-    // === NAVIO 4: Diagonal ↙ ===
-    int l4 = 2, c4 = 8;
-    if (l4 + 2 < TAM && c4 - 2 >= 0 &&
-        tabuleiro[l4][c4] == AGUA &&
-        tabuleiro[l4+1][c4-1] == AGUA &&
-        tabuleiro[l4+2][c4-2] == AGUA) {
+    criarCone(cone);
+    criarCruz(cruz);
+    criarOctaedro(octaedro);
 
-        tabuleiro[l4][c4] = NAVIO;
-        tabuleiro[l4+1][c4-1] = NAVIO;
-        tabuleiro[l4+2][c4-2] = NAVIO;
-    }
+    // Aplicação das habilidades em diferentes pontos
+    aplicarHabilidade(tabuleiro, cone, 2, 2);      // cone no canto superior esquerdo
+    aplicarHabilidade(tabuleiro, cruz, 5, 5);      // cruz no centro
+    aplicarHabilidade(tabuleiro, octaedro, 7, 8);  // octaedro no canto inferior direito
 
-    // === Mostrando o tabuleiro ===
-    printf("Tabuleiro:\n\n");
-    for (int i = 0; i < TAM; i++) {
-        for (int j = 0; j < TAM; j++) {
-            printf("%d ", tabuleiro[i][j]);
-        }
-        printf("\n");
-    }
+    // Exibir tabuleiro final
+    exibirTabuleiro(tabuleiro);
 
     return 0;
 }
+
 
 
